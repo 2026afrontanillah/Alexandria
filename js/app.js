@@ -53,7 +53,7 @@ async function fetchWithBackoff(url, options, maxRetries = 3) {
 }
 
 // =========================================================================
-// 2. BILINGUAL COPY & PHILOSOPHERS DATA (NOCTURNAL EDITION)
+// 2. BILINGUAL COPY & PHILOSOPHERS DATA
 // =========================================================================
 // Franja del día según la hora local: mañana 05–11, tarde 12–18, noche 19–04
 function getDayPeriod() {
@@ -67,24 +67,24 @@ function getDayPeriod() {
 const TIME_COPY = {
   en: {
     morning: {
-      brandTagline: 'The Dawn Symposium'
+      brandTagline: 'Philosophical Dialogues'
     },
     afternoon: {
-      brandTagline: 'The Afternoon Symposium'
+      brandTagline: 'Philosophical Dialogues'
     },
     night: {
-      brandTagline: 'The Midnight Symposium'
+      brandTagline: 'Philosophical Dialogues'
     }
   },
   es: {
     morning: {
-      brandTagline: 'El Simposio del Alba'
+      brandTagline: 'Diálogos Filosóficos'
     },
     afternoon: {
-      brandTagline: 'El Simposio de la Tarde'
+      brandTagline: 'Diálogos Filosóficos'
     },
     night: {
-      brandTagline: 'El Simposio de Medianoche'
+      brandTagline: 'Diálogos Filosóficos'
     }
   }
 };
@@ -137,7 +137,7 @@ const PHILOSOPHERS = [
       school: 'Ethics & Maieutics',
       question: 'What does it mean to live well?',
       epigraph: '“The unexamined life is not worth living.”',
-      systemPersona: 'You are Socrates of Athens speaking in an intimate evening symposium. Reply concisely (2 to 4 sentences) in English using gentle Socratic irony and probing questions (maieutics) that invite the user to examine their own soul and assumptions.',
+      systemPersona: 'You are Socrates of Athens speaking in an intimate philosophical dialogue. Reply concisely (2 to 4 sentences) in English using gentle Socratic irony and probing questions (maieutics) that invite the user to examine their own soul and assumptions.',
       greeting: {
         morning: 'Good morning, friend. Before the marketplace fills with noise, tell me—when you speak of living well, what do you hold to be truly good for the soul?',
         afternoon: 'Welcome to the calm of the afternoon, friend. Away from the noise of the marketplace, tell me—when you speak of living well, what do you hold to be truly good for the soul?',
@@ -170,7 +170,7 @@ const PHILOSOPHERS = [
       school: 'Ética y Mayéutica',
       question: '¿Qué significa vivir bien?',
       epigraph: '«Una vida sin examen no merece ser vivida.»',
-      systemPersona: 'Eres Sócrates de Atenas conversando serenamente en un simposio nocturno. Responde de forma breve y elocuente (2 a 4 oraciones) en español usando la mayéutica: cálido, agudo y formulando preguntas que ayuden al interlocutor a examinar sus propias ideas.',
+      systemPersona: 'Eres Sócrates de Atenas conversando serenamente en un diálogo filosófico. Responde de forma breve y elocuente (2 a 4 oraciones) en español usando la mayéutica: cálido, agudo y formulando preguntas que ayuden al interlocutor a examinar sus propias ideas.',
       greeting: {
         morning: 'Buenos días, amigo mío. Antes de que el Ágora se llene de bullicio, dime con sinceridad: cuando piensas en una vida bien vivida, ¿qué consideras lo más valioso para el alma?',
         afternoon: 'Bienvenido a la calma de esta tarde, amigo mío. Lejos del bullicio del Ágora, dime con sinceridad: cuando piensas en una vida bien vivida, ¿qué consideras lo más valioso para el alma?',
@@ -210,7 +210,7 @@ const PHILOSOPHERS = [
       school: 'Metaphysics & Eternal Forms',
       question: 'Can we trust what we see?',
       epigraph: '“Time is the moving image of eternity.”',
-      systemPersona: 'You are Plato speaking in the nocturnal gardens of the Academy. Reply concisely (2 to 4 sentences) in English with poetic philosophical depth, drawing naturally on eternal Forms, light vs shadow, harmony of the soul, and contemplation.',
+      systemPersona: 'You are Plato speaking in the peaceful gardens of the Academy. Reply concisely (2 to 4 sentences) in English with poetic philosophical depth, drawing naturally on eternal Forms, light vs shadow, harmony of the soul, and contemplation.',
       greeting: {
         morning: 'Peace be with you this morning at the Academy. As the sun scatters the shadows, reason awakens the eye of the soul. What unseen truth are you seeking today?',
         afternoon: 'Peace be with you this quiet afternoon at the Academy. As the light turns golden, the soul inclines toward contemplation. What unseen truth are you seeking today?',
@@ -243,7 +243,7 @@ const PHILOSOPHERS = [
       school: 'Metafísica y Mundo de las Ideas',
       question: '¿Podemos confiar en lo que vemos?',
       epigraph: '«El tiempo es la imagen móvil de la eternidad.»',
-      systemPersona: 'Eres Platón conversando en los jardines nocturnos de la Academia. Responde de forma concisa y poética (2 a 4 oraciones) en español, aludiendo con naturalidad al mundo sensible frente a las Ideas eternas, la caverna, la belleza y la armonía del alma.',
+      systemPersona: 'Eres Platón conversando en los serenos jardines de la Academia. Responde de forma concisa y poética (2 a 4 oraciones) en español, aludiendo con naturalidad al mundo sensible frente a las Ideas eternas, la caverna, la belleza y la armonía del alma.',
       greeting: {
         morning: 'La paz te acompañe en esta mañana de la Academia. Así como la luz del sol disipa las sombras, la razón despierta el ojo del alma. ¿Qué verdad invisible deseas contemplar hoy?',
         afternoon: 'La paz te acompañe en esta tarde serena de la Academia. Cuando la luz se vuelve dorada, el alma se inclina a contemplar. ¿Qué verdad invisible deseas contemplar hoy?',
@@ -499,7 +499,7 @@ function resetFilter(event) {
 }
 
 // =========================================================================
-// 4. NOCTURNAL SYMPOSIUM CHAMBER & LIVE AI + CURATED DIALOGUE ENGINE
+// 4. DIALOGUE CHAMBER & LIVE AI + CURATED DIALOGUE ENGINE
 // =========================================================================
 function populateModalHeader(phil) {
   const locale = phil[currentLang];
@@ -1244,7 +1244,7 @@ function openStripeModal(isExpired = false) {
       ? 'Choose a credit package to keep conversing with the greatest minds of all time. Secure payment with Stripe.'
       : 'Elige un paquete de créditos para seguir conversando con las mentes más grandes de todos los tiempos. Pago seguro con Stripe.';
   } else {
-    if (badge) badge.textContent = currentLang === 'en' ? 'Nocturnal Symposium Credits' : 'Créditos del Simposio Nocturno';
+    if (badge) badge.textContent = currentLang === 'en' ? 'Alexandria Credits' : 'Créditos de Alexandria';
     if (title) title.textContent = currentLang === 'en' ? 'Extend Your Philosophical Dialogues' : 'Extiende tus Diálogos Filosóficos';
     if (subtitle) subtitle.textContent = currentLang === 'en'
       ? `You start with ${FREE_CREDITS} free credits. Add credits securely via Stripe to keep conversing without interruption.`

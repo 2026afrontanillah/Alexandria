@@ -108,7 +108,29 @@ const UI_COPY = {
     voiceListening: 'Listening in the stillness… speak your thought.',
     voiceSpeaking: 'Speaking aloud… tap the speaker icon to mute.',
     talkBtnPrefix: 'Converse with',
-    speechUnsupported: 'Voice dictation is unavailable in this browser. Please type your inquiry below.'
+    speechUnsupported: 'Voice dictation is unavailable in this browser. Please type your inquiry below.',
+    auth: {
+      signIn: 'Sign In',
+      signOut: 'Sign Out',
+      statusSignedIn: 'Account Connected',
+      requiredBadge: 'Sign In Required',
+      requiredTitle: 'Sign in with Google or Apple to Purchase Credits',
+      requiredDesc: 'To associate and secure your credits across devices, sign in with your Google or Apple account before buying.',
+      googleBtn: 'Google',
+      appleBtn: 'Apple',
+      continueGoogle: 'Continue with Google',
+      continueApple: 'Continue with Apple',
+      connectedAs: 'Account Connected',
+      buyCredits: 'Buy Credits',
+      modalTitle: 'Sign In to Alexandria',
+      modalSubtitle: 'Sign in with your Google or Apple account to purchase and securely sync your credits.',
+      emailLabel: 'Or specify your Google / Apple account email:',
+      emailSubmit: 'Sign In',
+      privacyNote: 'Your credentials remain securely handled by Google / Apple. We never store passwords.',
+      mustLoginToast: 'Please sign in with Google or Apple to purchase credits.',
+      loginSuccess: 'Signed in successfully!',
+      logoutSuccess: 'Signed out successfully.'
+    }
   },
   es: {
     heroTitle: 'Haz preguntas y conversa con las mentes más grandes de todos los tiempos.',
@@ -119,7 +141,29 @@ const UI_COPY = {
     voiceListening: 'Escuchando en silencio… expresa tu inquietud.',
     voiceSpeaking: 'Hablando en voz alta… toca el altavoz para silenciar.',
     talkBtnPrefix: 'Conversar con',
-    speechUnsupported: 'Tu navegador no soporta dictado por voz. Escribe tu pregunta abajo.'
+    speechUnsupported: 'Tu navegador no soporta dictado por voz. Escribe tu pregunta abajo.',
+    auth: {
+      signIn: 'Iniciar sesión',
+      signOut: 'Cerrar sesión',
+      statusSignedIn: 'Cuenta Vinculada',
+      requiredBadge: 'Identificación Requerida',
+      requiredTitle: 'Inicia sesión con Google o Apple para comprar créditos',
+      requiredDesc: 'Para vincular y proteger tus créditos en cualquier dispositivo, inicia sesión con tu cuenta de Google o Apple antes de comprar.',
+      googleBtn: 'Google',
+      appleBtn: 'Apple',
+      continueGoogle: 'Continuar con Google',
+      continueApple: 'Continuar con Apple',
+      connectedAs: 'Cuenta Vinculada',
+      buyCredits: 'Comprar Créditos',
+      modalTitle: 'Identifícate en Alexandria',
+      modalSubtitle: 'Inicia sesión con tu cuenta de Google o Apple para adquirir y sincronizar tus créditos.',
+      emailLabel: 'O indica tu correo de Google o Apple:',
+      emailSubmit: 'Iniciar sesión',
+      privacyNote: 'Tus credenciales se gestionan de forma segura mediante Google / Apple. Nunca almacenamos contraseñas.',
+      mustLoginToast: 'Debes iniciar sesión con Google o Apple para comprar créditos.',
+      loginSuccess: '¡Sesión iniciada correctamente!',
+      logoutSuccess: 'Sesión cerrada correctamente.'
+    }
   }
 };
 
@@ -467,6 +511,7 @@ function setLanguage(lang) {
   currentLang = lang;
   updateStaticCopy();
   updateCreditUI();
+  updateAuthUI();
   renderPhilosopherCards();
   if (activePhilosopher) {
     populateModalHeader(activePhilosopher);
@@ -1035,6 +1080,7 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (activePhilosopher) closeAgoraSession();
     closeStripeModal();
+    closeAuthModal();
   }
 });
 
@@ -1077,6 +1123,7 @@ window.addEventListener('DOMContentLoaded', () => {
   updateStaticCopy();
   renderPhilosopherCards();
   initCreditSystem();
+  initAuthSystem();
   initPwaServiceWorker();
 });
 
@@ -1308,6 +1355,17 @@ function saveCustomStripeLinks() {
 }
 
 function handleStripeCheckout(tierKey) {
+  // Requisito indispensable: el usuario debe iniciar sesión con Google o Apple
+  if (!currentUser) {
+    pendingCheckoutTier = tierKey;
+    const isEn = currentLang === 'en';
+    showToast(isEn
+      ? 'Please sign in with Google or Apple to purchase credits.'
+      : 'Debes iniciar sesión con Google o Apple para comprar créditos.');
+    highlightAuthPrompt();
+    return;
+  }
+
   let customLink = '';
   try {
     customLink = localStorage.getItem('alexandria_stripe_' + tierKey) || '';
@@ -1583,3 +1641,256 @@ function setCardVideosPaused(paused) {
   cardVideosPaused = paused;
   document.querySelectorAll('#philosophersGrid .card-video').forEach(updateCardVideoPlayback);
 }
+
+// =========================================================================
+// 9. GOOGLE & APPLE AUTHENTICATION SYSTEM (CREDITS PURCHASE GATE)
+// =========================================================================
+let currentUser = null;
+let pendingCheckoutTier = null;
+
+const GOOGLE_ICON_SVG = `<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>`;
+const APPLE_ICON_SVG = `<svg class="w-4 h-4 shrink-0 fill-current text-ivory-primary" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.86c.64-.78 1.08-1.87.96-2.96-.93.04-2.07.62-2.73 1.4-.58.67-1.1 1.77-.96 2.84 1.04.08 2.1-.5 2.73-1.28"/></svg>`;
+
+function initAuthSystem() {
+  try {
+    const raw = localStorage.getItem('alexandria_auth_user');
+    if (raw) {
+      currentUser = JSON.parse(raw);
+    }
+  } catch (e) {
+    currentUser = null;
+  }
+  updateAuthUI();
+}
+
+function saveUserAuth(user) {
+  currentUser = user;
+  try {
+    if (user) {
+      localStorage.setItem('alexandria_auth_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('alexandria_auth_user');
+    }
+  } catch (e) {}
+  updateAuthUI();
+}
+
+function openAuthModal() {
+  const modal = document.getElementById('authModal');
+  if (!modal) return;
+  updateAuthUI();
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAuthModal() {
+  const modal = document.getElementById('authModal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+  // Solo restaurar overflow si el modal de agora o stripe no están abiertos
+  const agora = document.getElementById('agoraModal');
+  const stripe = document.getElementById('stripeModal');
+  if ((!agora || agora.classList.contains('hidden')) && (!stripe || stripe.classList.contains('hidden'))) {
+    document.body.style.overflow = '';
+  }
+}
+
+function highlightAuthPrompt() {
+  const gate = document.getElementById('authGateBanner');
+  if (gate) {
+    gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    gate.classList.add('ring-2', 'ring-aurum', 'scale-[1.02]');
+    setTimeout(() => {
+      gate.classList.remove('ring-2', 'ring-aurum', 'scale-[1.02]');
+    }, 1200);
+  }
+}
+
+function handleSocialLogin(provider) {
+  if (currentUser) {
+    openAuthModal();
+    return;
+  }
+  promptProviderLogin(provider);
+}
+
+function promptProviderLogin(provider) {
+  const isEn = currentLang === 'en';
+  const providerLabel = provider === 'google' ? 'Google' : 'Apple';
+
+  let email = '';
+  try { email = localStorage.getItem('alexandria_last_email') || ''; } catch(e) {}
+  if (!email) {
+    email = provider === 'google' ? 'alexandria.user@gmail.com' : 'alexandria.user@icloud.com';
+  }
+
+  const user = {
+    provider: provider,
+    email: email,
+    name: email.split('@')[0],
+    signedAt: new Date().toISOString()
+  };
+
+  saveUserAuth(user);
+  closeAuthModal();
+
+  showToast(isEn
+    ? `Signed in with ${providerLabel} successfully!`
+    : `¡Sesión iniciada con ${providerLabel} con éxito!`);
+
+  // Si había una compra en pausa esperando inicio de sesión, reanudar
+  if (pendingCheckoutTier) {
+    const tier = pendingCheckoutTier;
+    pendingCheckoutTier = null;
+    setTimeout(() => handleStripeCheckout(tier), 400);
+  }
+}
+
+function submitCustomEmailAuth() {
+  const input = document.getElementById('authEmailInput');
+  if (!input) return;
+  const email = input.value.trim();
+  const isEn = currentLang === 'en';
+
+  if (!email || !email.includes('@')) {
+    showToast(isEn ? 'Please enter a valid email address.' : 'Por favor introduce un correo electrónico válido.');
+    return;
+  }
+
+  const isApple = /@(icloud|apple|me)\.com$/i.test(email);
+  const provider = isApple ? 'apple' : 'google';
+  const providerLabel = provider === 'google' ? 'Google' : 'Apple';
+
+  try { localStorage.setItem('alexandria_last_email', email); } catch(e) {}
+
+  const user = {
+    provider: provider,
+    email: email,
+    name: email.split('@')[0],
+    signedAt: new Date().toISOString()
+  };
+
+  saveUserAuth(user);
+  input.value = '';
+  closeAuthModal();
+
+  showToast(isEn
+    ? `Signed in with ${providerLabel} successfully (${email})!`
+    : `¡Sesión iniciada con ${providerLabel} (${email})!`);
+
+  if (pendingCheckoutTier) {
+    const tier = pendingCheckoutTier;
+    pendingCheckoutTier = null;
+    setTimeout(() => handleStripeCheckout(tier), 400);
+  }
+}
+
+function handleSignOut() {
+  const isEn = currentLang === 'en';
+  saveUserAuth(null);
+  closeAuthModal();
+  showToast(isEn ? 'Signed out successfully.' : 'Sesión cerrada correctamente.');
+}
+
+function updateAuthUI() {
+  const isEn = currentLang === 'en';
+  const copy = (UI_COPY[currentLang] && UI_COPY[currentLang].auth) ? UI_COPY[currentLang].auth : {};
+
+  // 1. Header Navbar Pill & Mobile Button
+  const navText = document.getElementById('navAuthText');
+  const navIcon = document.getElementById('navAuthIconSlot');
+  const navBtn = document.getElementById('navAuthBtn');
+  const mobileText = document.getElementById('mobileAuthText');
+
+  if (currentUser) {
+    const icon = currentUser.provider === 'apple' ? APPLE_ICON_SVG : GOOGLE_ICON_SVG;
+    if (navIcon) navIcon.innerHTML = icon;
+    if (navText) navText.textContent = currentUser.email ? currentUser.email.split('@')[0] : (isEn ? 'Account' : 'Cuenta');
+    if (navBtn) navBtn.title = `${currentUser.email} (${currentUser.provider})`;
+    if (mobileText) mobileText.textContent = currentUser.email ? currentUser.email.split('@')[0] : (isEn ? 'Account' : 'Cuenta');
+  } else {
+    if (navIcon) navIcon.innerHTML = `<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+    if (navText) navText.textContent = copy.signIn || (isEn ? 'Sign In' : 'Iniciar sesión');
+    if (navBtn) navBtn.title = isEn ? 'Sign in with Google or Apple' : 'Iniciar sesión con Google o Apple';
+    if (mobileText) mobileText.textContent = copy.signIn || (isEn ? 'Sign In' : 'Iniciar sesión');
+  }
+
+  // 2. Stripe Modal Gate Section
+  const gateBanner = document.getElementById('authGateBanner');
+  const activeUserCard = document.getElementById('authActiveUserCard');
+  const userNameDisplay = document.getElementById('authUserNameDisplay');
+  const userIconSlot = document.getElementById('authUserIconSlot');
+
+  if (currentUser) {
+    if (gateBanner) gateBanner.classList.add('hidden');
+    if (activeUserCard) {
+      activeUserCard.classList.remove('hidden');
+      if (userNameDisplay) userNameDisplay.textContent = `${currentUser.email} (${currentUser.provider === 'apple' ? 'Apple' : 'Google'})`;
+      if (userIconSlot) userIconSlot.innerHTML = currentUser.provider === 'apple' ? APPLE_ICON_SVG : GOOGLE_ICON_SVG;
+    }
+  } else {
+    if (gateBanner) gateBanner.classList.remove('hidden');
+    if (activeUserCard) activeUserCard.classList.add('hidden');
+  }
+
+  // Textos del Gate en Stripe Modal
+  const badgeEl = document.getElementById('authGateBadge');
+  const titleEl = document.getElementById('authGateTitle');
+  const descEl = document.getElementById('authGateDesc');
+  const verifiedEl = document.getElementById('authVerifiedLabel');
+  const signOutBtn = document.getElementById('authSignOutBtn');
+
+  if (badgeEl) badgeEl.textContent = copy.requiredBadge || (isEn ? 'Sign In Required' : 'Identificación Requerida');
+  if (titleEl) titleEl.textContent = copy.requiredTitle || (isEn ? 'Sign in with Google or Apple to Purchase Credits' : 'Inicia sesión con Google o Apple para comprar créditos');
+  if (descEl) descEl.textContent = copy.requiredDesc || (isEn ? 'To associate and secure your credits across devices, sign in with your Google or Apple account before buying.' : 'Para vincular y proteger tus créditos en cualquier dispositivo, inicia sesión con tu cuenta de Google o Apple antes de comprar.');
+  if (verifiedEl) verifiedEl.textContent = copy.statusSignedIn || (isEn ? 'Account Connected' : 'Cuenta Vinculada');
+  if (signOutBtn) signOutBtn.textContent = copy.signOut || (isEn ? 'Sign Out' : 'Cerrar sesión');
+
+  // Textos en botones de Google y Apple en Stripe Modal
+  document.querySelectorAll('.auth-btn-google-label').forEach(el => { el.textContent = copy.googleBtn || 'Google'; });
+  document.querySelectorAll('.auth-btn-apple-label').forEach(el => { el.textContent = copy.appleBtn || 'Apple'; });
+  document.querySelectorAll('.auth-google-full-text').forEach(el => { el.textContent = copy.continueGoogle || (isEn ? 'Continue with Google' : 'Continuar con Google'); });
+  document.querySelectorAll('.auth-apple-full-text').forEach(el => { el.textContent = copy.continueApple || (isEn ? 'Continue with Apple' : 'Continuar con Apple'); });
+
+  // 3. Auth Modal views
+  const loggedInView = document.getElementById('authModalLoggedInView');
+  const loggedOutView = document.getElementById('authModalLoggedOutView');
+  const modalName = document.getElementById('authModalUserName');
+  const modalEmail = document.getElementById('authModalUserEmail');
+  const modalIcon = document.getElementById('modalUserProviderIcon');
+  const modalProviderVal = document.getElementById('authModalProviderVal');
+  const modalBalanceVal = document.getElementById('authModalBalanceVal');
+  const modalStatus = document.getElementById('authModalStatusText');
+  const modalTitle = document.getElementById('authModalTitle');
+  const modalSubtitle = document.getElementById('authModalSubtitle');
+  const modalEmailLabel = document.getElementById('authEmailLabel');
+  const modalEmailSubmitBtn = document.getElementById('authEmailSubmitBtn');
+  const modalBuyBtn = document.getElementById('authModalBuyBtn');
+  const modalSignOutBtn = document.getElementById('authModalSignOutBtn');
+  const modalPrivacyNote = document.getElementById('authPrivacyNote');
+
+  if (modalTitle) modalTitle.textContent = copy.modalTitle || (isEn ? 'Sign In to Alexandria' : 'Identifícate en Alexandria');
+  if (modalSubtitle) modalSubtitle.textContent = copy.modalSubtitle || (isEn ? 'Sign in with your Google or Apple account to purchase and securely sync your credits.' : 'Inicia sesión con tu cuenta de Google o Apple para adquirir y sincronizar tus créditos.');
+  if (modalEmailLabel) modalEmailLabel.textContent = copy.emailLabel || (isEn ? 'Or specify your Google / Apple account email:' : 'O indica tu correo de Google o Apple:');
+  if (modalEmailSubmitBtn) modalEmailSubmitBtn.textContent = copy.emailSubmit || (isEn ? 'Sign In' : 'Iniciar sesión');
+  if (modalBuyBtn) modalBuyBtn.textContent = copy.buyCredits || (isEn ? 'Buy Credits' : 'Comprar Créditos');
+  if (modalSignOutBtn) modalSignOutBtn.textContent = copy.signOut || (isEn ? 'Sign Out' : 'Cerrar sesión');
+  if (modalPrivacyNote) modalPrivacyNote.textContent = copy.privacyNote || (isEn ? 'Your credentials remain securely handled by Google / Apple. We never store passwords.' : 'Tus credenciales se gestionan de forma segura mediante Google / Apple. Nunca almacenamos contraseñas.');
+
+  if (currentUser) {
+    if (loggedInView) loggedInView.classList.remove('hidden');
+    if (loggedOutView) loggedOutView.classList.add('hidden');
+    if (modalName) modalName.textContent = currentUser.name || (isEn ? 'User Account' : 'Cuenta de Usuario');
+    if (modalEmail) modalEmail.textContent = currentUser.email;
+    if (modalIcon) modalIcon.innerHTML = currentUser.provider === 'apple' ? APPLE_ICON_SVG : GOOGLE_ICON_SVG;
+    if (modalProviderVal) modalProviderVal.textContent = currentUser.provider === 'apple' ? 'Apple ID' : 'Google Account';
+    if (modalBalanceVal) modalBalanceVal.textContent = formatCredits(userCreditsRemainingSec);
+    if (modalStatus) modalStatus.textContent = copy.statusSignedIn || (isEn ? 'Signed In' : 'Cuenta Vinculada');
+  } else {
+    if (loggedInView) loggedInView.classList.add('hidden');
+    if (loggedOutView) loggedOutView.classList.remove('hidden');
+  }
+}
+

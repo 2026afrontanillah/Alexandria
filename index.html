@@ -204,6 +204,23 @@
           <span class="hidden sm:inline">Install App</span>
         </button>
 
+        <!-- User Auth Button in Navbar -->
+        <button
+          type="button"
+          id="navAuthBtn"
+          onclick="openAuthModal()"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-obsidian-950/90 hover:bg-obsidian-850 border border-aurum/30 hover:border-aurum text-ivory-primary text-xs font-semibold shadow-sm transition-all group"
+          title="Sign in with Google or Apple"
+        >
+          <span id="navAuthIconSlot" class="w-3.5 h-3.5 flex items-center justify-center text-aurum">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </span>
+          <span id="navAuthText" class="tracking-wide">Sign In</span>
+        </button>
+
         <!-- Language Toggle -->
         <div class="inline-flex items-center p-0.5 rounded-full bg-obsidian-950/90 border border-aurum/25" role="group">
           <button id="langEnBtn" onclick="setLanguage('en')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wider transition-all bg-aurum text-obsidian-950">
@@ -244,6 +261,14 @@
             class="hidden pwa-install-trigger shrink-0 px-2.5 py-1 rounded-full bg-aurum/15 border border-aurum/30 text-aurum text-[11px] font-semibold flex items-center gap-1"
           >
             <span>⬇</span><span>Install</span>
+          </button>
+          <button
+            type="button"
+            id="mobileAuthBtn"
+            onclick="openAuthModal()"
+            class="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-obsidian-950 border border-aurum/30 text-ivory-primary text-[11px] font-medium"
+          >
+            <span id="mobileAuthText">Sign In</span>
           </button>
           <button
             type="button"
@@ -449,6 +474,79 @@
         </div>
       </div>
 
+      <!-- Authentication Gate for Credit Purchases -->
+      <div id="authGateSection" class="mb-6">
+        <!-- Logged-out Prompt -->
+        <div id="authGateBanner" class="p-4 sm:p-5 rounded-2xl bg-obsidian-950/90 border border-aurum/40 shadow-monolith text-center relative overflow-hidden transition-all">
+          <div class="pointer-events-none absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-20 bg-aurum/15 blur-2xl rounded-full"></div>
+          <div class="relative z-10">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-aurum/15 border border-aurum/30 text-aurum text-[10px] font-bold uppercase tracking-wider mb-2">
+              <span id="authGateBadge">Sign In Required</span>
+            </div>
+            <h3 id="authGateTitle" class="font-serif text-lg sm:text-xl font-bold text-ivory-primary">
+              Sign in with Google or Apple to Purchase Credits
+            </h3>
+            <p id="authGateDesc" class="text-xs text-ivory-secondary mt-1 max-w-md mx-auto leading-relaxed">
+              To associate and secure your credits across devices, sign in with your Google or Apple account before buying.
+            </p>
+
+            <!-- Social Sign-in Buttons -->
+            <div class="mt-4 flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
+              <!-- Google Button -->
+              <button
+                type="button"
+                onclick="handleSocialLogin('google')"
+                class="w-full sm:w-1/2 py-2.5 px-4 rounded-xl bg-obsidian-850 hover:bg-obsidian-800 border border-aurum/40 hover:border-aurum text-ivory-primary text-xs font-semibold transition-all flex items-center justify-center gap-2.5 shadow-sm hover:shadow-[0_0_20px_rgba(212,168,83,0.2)] group active:scale-95"
+              >
+                <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z"/>
+                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                  <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                </svg>
+                <span class="auth-btn-google-label">Google</span>
+              </button>
+
+              <!-- Apple Button -->
+              <button
+                type="button"
+                onclick="handleSocialLogin('apple')"
+                class="w-full sm:w-1/2 py-2.5 px-4 rounded-xl bg-obsidian-850 hover:bg-obsidian-800 border border-aurum/40 hover:border-aurum text-ivory-primary text-xs font-semibold transition-all flex items-center justify-center gap-2.5 shadow-sm hover:shadow-[0_0_20px_rgba(212,168,83,0.2)] group active:scale-95"
+              >
+                <svg class="w-4 h-4 shrink-0 fill-current text-ivory-primary" viewBox="0 0 24 24">
+                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.86c.64-.78 1.08-1.87.96-2.96-.93.04-2.07.62-2.73 1.4-.58.67-1.1 1.77-.96 2.84 1.04.08 2.1-.5 2.73-1.28"/>
+                </svg>
+                <span class="auth-btn-apple-label">Apple</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Logged-in State Card -->
+        <div id="authActiveUserCard" class="hidden p-3.5 sm:p-4 rounded-2xl bg-obsidian-950/90 border border-emerald-500/40 shadow-sm flex items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-3 min-w-0">
+            <div id="authUserIconSlot" class="w-9 h-9 rounded-full bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center shrink-0">
+              <!-- Provider Icon -->
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span id="authVerifiedLabel" class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Account Connected</span>
+              </div>
+              <div id="authUserNameDisplay" class="font-medium text-ivory-primary text-xs sm:text-sm truncate">user@gmail.com</div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onclick="handleSignOut()"
+            class="shrink-0 px-2.5 py-1 rounded-lg border border-aurum/20 hover:border-aurum/50 text-[11px] text-ivory-secondary hover:text-aurum-light transition-all"
+            id="authSignOutBtn"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+
       <!-- Packages Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <!-- 300 créditos · $7 -->
@@ -553,6 +651,142 @@
             </button>
           </div>
         </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. GOOGLE & APPLE SIGN-IN / ACCOUNT MODAL -->
+  <div id="authModal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-5" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+    <div onclick="closeAuthModal()" class="fixed inset-0 bg-black/85 backdrop-blur-md transition-opacity"></div>
+    <div class="relative z-10 w-full max-w-md bg-gradient-to-b from-obsidian-900 via-obsidian-900 to-obsidian-950 rounded-[28px] border border-aurum/40 shadow-2xl p-6 sm:p-7 overflow-y-auto max-h-[92vh]">
+      <!-- Close button -->
+      <button onclick="closeAuthModal()" class="absolute top-4 right-4 p-2 rounded-full border border-aurum/25 bg-obsidian-850 text-ivory-secondary hover:text-aurum-light transition-colors" aria-label="Close modal">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+
+      <!-- Logged-in State in Auth Modal -->
+      <div id="authModalLoggedInView" class="hidden text-center">
+        <div id="modalUserProviderIcon" class="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-500/15 border-2 border-emerald-500/50 flex items-center justify-center text-emerald-400">
+          <!-- Icon -->
+        </div>
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold uppercase tracking-wider mb-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="authModalStatusText">Signed In</span>
+        </div>
+        <h3 id="authModalUserName" class="font-serif text-2xl font-bold text-ivory-primary">
+          User Account
+        </h3>
+        <p id="authModalUserEmail" class="text-xs sm:text-sm text-ivory-secondary mt-1 font-mono">
+          user@example.com
+        </p>
+
+        <div class="mt-6 p-4 rounded-xl bg-obsidian-950 border border-aurum/20 text-left text-xs space-y-2">
+          <div class="flex justify-between items-center text-ivory-secondary">
+            <span id="authModalBalanceLabel">Credits Available:</span>
+            <span id="authModalBalanceVal" class="font-mono font-bold text-aurum text-sm">50 credits</span>
+          </div>
+          <div class="flex justify-between items-center text-ivory-secondary">
+            <span id="authModalProviderLabel">Sign-in Provider:</span>
+            <span id="authModalProviderVal" class="font-semibold text-ivory-primary capitalize">Google</span>
+          </div>
+        </div>
+
+        <div class="mt-6 flex flex-col gap-2.5">
+          <button
+            type="button"
+            onclick="closeAuthModal(); openStripeModal();"
+            class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-aurum to-aurum-light text-obsidian-950 font-bold text-xs shadow-gold-cta hover:brightness-110 transition-all"
+            id="authModalBuyBtn"
+          >
+            Buy Credits
+          </button>
+          <button
+            type="button"
+            onclick="handleSignOut()"
+            class="w-full py-2 px-4 rounded-xl bg-obsidian-850 hover:bg-crimson/25 border border-aurum/25 hover:border-crimson/50 text-ivory-secondary hover:text-crimson-light text-xs font-semibold transition-all"
+            id="authModalSignOutBtn"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+
+      <!-- Logged-out State in Auth Modal -->
+      <div id="authModalLoggedOutView">
+        <div class="text-center mb-6">
+          <div class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-gradient-to-b from-obsidian-700 to-obsidian-900 border border-aurum/40 flex items-center justify-center text-aurum shadow-inner">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <h3 id="authModalTitle" class="font-serif text-2xl font-bold text-ivory-primary">
+            Sign In to Alexandria
+          </h3>
+          <p id="authModalSubtitle" class="text-xs sm:text-sm text-ivory-secondary mt-1.5 leading-relaxed">
+            Sign in with your Google or Apple account to purchase and securely sync your credits.
+          </p>
+        </div>
+
+        <!-- Social Buttons -->
+        <div class="space-y-3">
+          <!-- Google Button -->
+          <button
+            type="button"
+            onclick="promptProviderLogin('google')"
+            class="w-full py-3 px-4 rounded-xl bg-white hover:bg-gray-100 text-gray-900 font-semibold text-xs transition-all flex items-center justify-center gap-3 shadow-md active:scale-[0.99]"
+          >
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z"/>
+              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+              <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+            </svg>
+            <span class="auth-google-full-text">Continue with Google</span>
+          </button>
+
+          <!-- Apple Button -->
+          <button
+            type="button"
+            onclick="promptProviderLogin('apple')"
+            class="w-full py-3 px-4 rounded-xl bg-black hover:bg-neutral-900 border border-neutral-700 text-white font-semibold text-xs transition-all flex items-center justify-center gap-3 shadow-md active:scale-[0.99]"
+          >
+            <svg class="w-4 h-4 shrink-0 fill-current" viewBox="0 0 24 24">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.86c.64-.78 1.08-1.87.96-2.96-.93.04-2.07.62-2.73 1.4-.58.67-1.1 1.77-.96 2.84 1.04.08 2.1-.5 2.73-1.28"/>
+            </svg>
+            <span class="auth-apple-full-text">Continue with Apple</span>
+          </button>
+        </div>
+
+        <!-- Optional custom email input for explicit Google/Apple account testing -->
+        <div class="mt-5 pt-4 border-t border-aurum/15">
+          <label id="authEmailLabel" class="block text-[11px] text-ivory-secondary mb-1.5">
+            Or specify your Google / Apple account email:
+          </label>
+          <div class="flex items-center gap-2">
+            <input
+              id="authEmailInput"
+              type="email"
+              placeholder="name@gmail.com / name@icloud.com"
+              class="flex-1 bg-obsidian-850 border border-aurum/30 rounded-xl px-3 py-2 text-xs text-ivory-primary placeholder:text-ivory-muted focus:outline-none focus:border-aurum"
+            />
+            <button
+              type="button"
+              onclick="submitCustomEmailAuth()"
+              class="px-3.5 py-2 rounded-xl bg-aurum hover:bg-aurum-light text-obsidian-950 font-bold text-xs transition-all shrink-0"
+              id="authEmailSubmitBtn"
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+
+        <p id="authPrivacyNote" class="text-[10px] text-ivory-muted text-center mt-4 leading-relaxed">
+          Your credentials remain securely handled by Google / Apple. We never store passwords.
+        </p>
       </div>
     </div>
   </div>

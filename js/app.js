@@ -553,9 +553,42 @@ function setAvatarSpeaking(on, volumeFn = null) {
 }
 
 let activeElevenConversation = null;
+let pendingConnectingConversation = null; // promesa en curso de conexión a ElevenLabs
 let sessionUsesEleven = false;   // la sesión actual usa la voz en vivo de ElevenLabs
 let elevenSessionToken = 0;
 let pendingElevenPrompt = null;  // pregunta para enviar en cuanto conecte
+
+/**
+ * Cierra de forma garantizada cualquier sesión activa o en proceso de conexión con ElevenLabs
+ * para evitar el consumo de créditos.
+ */
+async function terminateElevenLabsSession() {
+  elevenSessionToken++;
+  sessionUsesEleven = false;
+  pendingElevenPrompt = null;
+
+  if (activeElevenConversation) {
+    const conv = activeElevenConversation;
+    activeElevenConversation = null;
+    try {
+      if (typeof conv.endSession === 'function') {
+        await conv.endSession();
+      }
+    } catch (e) {
+      console.warn('ElevenLabs endSession aviso:', e);
+    }
+  }
+
+  if (pendingConnectingConversation) {
+    try {
+      const pendingConv = await pendingConnectingConversation;
+      if (pendingConv && typeof pendingConv.endSession === 'function') {
+        await pendingConv.endSession();
+      }
+    } catch (e) {}
+    pendingConnectingConversation = null;
+  }
+}
 
 // -------------------------------------------------------------------------
 // AGENTES DE ELEVENLABS POR FILÓSOFO
@@ -625,7 +658,7 @@ async function startElevenLabsSession(phil) {
 
   try {
     setVocalizingUI(false, isEn() ? `Connecting call with ${name()}…` : `Conectando llamada con ${name()}…`);
-    const conversation = await ElevenLabsClient.Conversation.startSession({
+    const sessionPromise = ElevenLabsClient.Conversation.startSession({
       agentId: ELEVEN_AGENTS[phil.id].agentId,
       overrides: buildElevenOverrides(phil),
       onConnect: () => {
@@ -670,6 +703,10 @@ async function startElevenLabsSession(phil) {
       },
     });
 
+    pendingConnectingConversation = sessionPromise;
+    const conversation = await sessionPromise;
+    pendingConnectingConversation = null;
+
     // Si mientras conectaba se cerró la sesión o se cambió de filósofo, se cuelga
     if (!isCurrent()) {
       try { await conversation.endSession(); } catch (e) {}
@@ -683,6 +720,7 @@ async function startElevenLabsSession(phil) {
       try { conversation.sendUserMessage(prompt); } catch (e) { console.error(e); }
     }
   } catch (err) {
+    pendingConnectingConversation = null;
     console.error('Error starting ElevenLabs:', err);
     if (!isCurrent()) return;
     const micDenied = err && (err.name === 'NotAllowedError' || /permission|microphone|micr/i.test(err.message || ''));
@@ -695,7 +733,7 @@ async function startElevenLabsSession(phil) {
   }
 }
 
-function openAgoraSession(philosopherId, initialPrompt = null) {
+async function openAgoraSession(philosopherId, initialPrompt = null) {
   if (userCreditsRemainingSec <= 0) {
     showToast(currentLang === 'en'
       ? 'You have run out of credits. Please choose a package to continue.'
@@ -709,10 +747,8 @@ function openAgoraSession(philosopherId, initialPrompt = null) {
 
   stopSpeaking();
   stopVoiceRecognition();
-  if (activeElevenConversation) {
-    try { activeElevenConversation.endSession(); } catch (e) {}
-    activeElevenConversation = null;
-  }
+  stopSessionCreditCountdown();
+  await terminateElevenLabsSession();
 
   activePhilosopher = phil;
   conversationHistory = [];
@@ -745,21 +781,31 @@ function openAgoraSession(philosopherId, initialPrompt = null) {
 }
 
 async function closeAgoraSession() {
+  // 1. Detener inmediatamente el consumo de créditos y persistir el saldo restante
   stopSessionCreditCountdown();
+  saveCreditsToStorage();
   showLowCreditWarning(false);
-  if (activeElevenConversation) {
-    try { await activeElevenConversation.endSession(); } catch (e) {}
-    activeElevenConversation = null;
-  }
+
+  // 2. Terminar garantizadamente cualquier conexión activa o en curso con ElevenLabs
+  await terminateElevenLabsSession();
+
+  // 3. Detener síntesis local de voz y reconocimiento de voz
   stopSpeaking();
   stopVoiceRecognition();
+
+  // 4. Detener pistas del micrófono y visualizador de audio
+  stopMicMeter();
+  stopWaveLevelsLoop();
+
+  // 5. Ocultar modal y restablecer interfaz
   const modal = document.getElementById('agoraModal');
-  modal.classList.add('hidden');
-  modal.classList.remove('flex');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
   document.body.style.overflow = '';
   destroyAvatar();
-  stopWaveLevelsLoop();
-  stopMicMeter();
+  setAvatarSpeaking(false);
   setCardVideosPaused(false);
   activePhilosopher = null;
 }
@@ -991,6 +1037,31 @@ window.addEventListener('keydown', (e) => {
     closeStripeModal();
   }
 });
+
+/**
+ * Cuando el usuario cierra la ventana, pestaña o navega a otra URL,
+ * desconecta inmediatamente la llamada de ElevenLabs y congela los créditos.
+ */
+function handleWindowCloseOrUnload() {
+  stopSessionCreditCountdown();
+  saveCreditsToStorage();
+
+  if (activeElevenConversation) {
+    try {
+      if (typeof activeElevenConversation.endSession === 'function') {
+        activeElevenConversation.endSession();
+      }
+    } catch (e) {}
+    activeElevenConversation = null;
+  }
+
+  stopMicMeter();
+  stopSpeaking();
+  stopVoiceRecognition();
+}
+
+window.addEventListener('beforeunload', handleWindowCloseOrUnload);
+window.addEventListener('pagehide', handleWindowCloseOrUnload);
 
 // Si cambia la franja (p. ej. de tarde a noche) con la página abierta, actualiza los textos
 let lastDayPeriod = getDayPeriod();

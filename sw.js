@@ -1,4 +1,4 @@
-const CACHE_NAME = 'alexandria-nocturna-v22';
+const CACHE_NAME = 'alexandria-nocturna-v23';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

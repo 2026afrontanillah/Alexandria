@@ -22,6 +22,10 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- ElevenLabs Realtime Client SDK (Llamada directa sin widget flotante) -->
   <script src="https://cdn.jsdelivr.net/npm/@elevenlabs/client/dist/lib.iife.js"></script>
+  <!-- Google Identity Services (Google Sign-In Oficial) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Apple Sign-In SDK Oficial -->
+  <script type="text/javascript" src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/auth.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -761,16 +765,16 @@
           </button>
         </div>
 
-        <!-- Optional custom email input for explicit Google/Apple account testing -->
+        <!-- Real Google & Apple account input -->
         <div class="mt-5 pt-4 border-t border-aurum/15">
           <label id="authEmailLabel" class="block text-[11px] text-ivory-secondary mb-1.5">
-            Or specify your Google / Apple account email:
+            Ingresa tu correo real de Google o Apple:
           </label>
           <div class="flex items-center gap-2">
             <input
               id="authEmailInput"
               type="email"
-              placeholder="name@gmail.com / name@icloud.com"
+              placeholder="tu.nombre@gmail.com / tu.nombre@icloud.com"
               class="flex-1 bg-obsidian-850 border border-aurum/30 rounded-xl px-3 py-2 text-xs text-ivory-primary placeholder:text-ivory-muted focus:outline-none focus:border-aurum"
             />
             <button
@@ -779,13 +783,31 @@
               class="px-3.5 py-2 rounded-xl bg-aurum hover:bg-aurum-light text-obsidian-950 font-bold text-xs transition-all shrink-0"
               id="authEmailSubmitBtn"
             >
-              Sign In
+              Conectar
             </button>
           </div>
         </div>
 
+        <!-- Expandable OAuth Client ID Setup -->
+        <details class="mt-4 pt-3 border-t border-aurum/15 text-[11px] text-ivory-secondary">
+          <summary class="cursor-pointer text-aurum/80 hover:text-aurum font-medium">⚙️ Configuración Google Cloud OAuth / Apple ID</summary>
+          <div class="mt-2.5 space-y-2 p-3 rounded-xl bg-obsidian-950 border border-aurum/20">
+            <div>
+              <label class="block text-[10px] text-ivory-muted">Google OAuth Client ID (Google Cloud Console):</label>
+              <input id="googleClientIdInput" type="text" placeholder="123456789-abc.apps.googleusercontent.com" class="w-full bg-obsidian-850 border border-aurum/30 rounded px-2.5 py-1 text-xs text-ivory-primary font-mono" />
+            </div>
+            <div>
+              <label class="block text-[10px] text-ivory-muted">Apple Services ID (Apple Developer Portal):</label>
+              <input id="appleClientIdInput" type="text" placeholder="com.example.alexandria.auth" class="w-full bg-obsidian-850 border border-aurum/30 rounded px-2.5 py-1 text-xs text-ivory-primary font-mono" />
+            </div>
+            <button type="button" onclick="saveOAuthClientIds()" class="mt-1 px-3 py-1 rounded bg-aurum/20 border border-aurum/40 text-aurum text-[11px] font-medium hover:bg-aurum/30">
+              Guardar Client IDs
+            </button>
+          </div>
+        </details>
+
         <p id="authPrivacyNote" class="text-[10px] text-ivory-muted text-center mt-4 leading-relaxed">
-          Your credentials remain securely handled by Google / Apple. We never store passwords.
+          Tus credenciales se gestionan de forma segura con Google / Apple. Nunca almacenamos contraseñas.
         </p>
       </div>
     </div>

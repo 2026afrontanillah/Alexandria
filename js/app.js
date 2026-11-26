@@ -1651,6 +1651,19 @@ let pendingCheckoutTier = null;
 const GOOGLE_ICON_SVG = `<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>`;
 const APPLE_ICON_SVG = `<svg class="w-4 h-4 shrink-0 fill-current text-ivory-primary" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.86c.64-.78 1.08-1.87.96-2.96-.93.04-2.07.62-2.73 1.4-.58.67-1.1 1.77-.96 2.84 1.04.08 2.1-.5 2.73-1.28"/></svg>`;
 
+function parseJwt(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
 function initAuthSystem() {
   try {
     const raw = localStorage.getItem('alexandria_auth_user');
@@ -1660,7 +1673,58 @@ function initAuthSystem() {
   } catch (e) {
     currentUser = null;
   }
+
+  // Elimina de inmediato cualquier usuario ficticio o de prueba anterior
+  if (currentUser && (
+    !currentUser.email ||
+    currentUser.email.includes('alexandria.user') ||
+    currentUser.email.includes('user@example')
+  )) {
+    currentUser = null;
+    try { localStorage.removeItem('alexandria_auth_user'); } catch (e) {}
+  }
+
+  initGoogleIdentityServices();
   updateAuthUI();
+}
+
+function initGoogleIdentityServices() {
+  const clientId = localStorage.getItem('alexandria_google_client_id') || '';
+  if (clientId && window.google && window.google.accounts && window.google.accounts.id) {
+    try {
+      google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleCredentialResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true
+      });
+    } catch (e) {
+      console.warn('Google Identity Services notice:', e);
+    }
+  }
+}
+
+function handleGoogleCredentialResponse(response) {
+  if (!response || !response.credential) return;
+  const payload = parseJwt(response.credential);
+  if (payload && payload.email) {
+    const user = {
+      provider: 'google',
+      email: payload.email,
+      name: payload.name || payload.email.split('@')[0],
+      picture: payload.picture || '',
+      signedAt: new Date().toISOString()
+    };
+    saveUserAuth(user);
+    closeAuthModal();
+    const isEn = currentLang === 'en';
+    showToast(isEn ? `Welcome, ${user.name}!` : `¡Bienvenido, ${user.name}!`);
+    if (pendingCheckoutTier) {
+      const tier = pendingCheckoutTier;
+      pendingCheckoutTier = null;
+      setTimeout(() => handleStripeCheckout(tier), 400);
+    }
+  }
 }
 
 function saveUserAuth(user) {
@@ -1678,6 +1742,7 @@ function saveUserAuth(user) {
 function openAuthModal() {
   const modal = document.getElementById('authModal');
   if (!modal) return;
+  loadOAuthClientIds();
   updateAuthUI();
   modal.classList.remove('hidden');
   modal.classList.add('flex');
@@ -1689,7 +1754,6 @@ function closeAuthModal() {
   if (!modal) return;
   modal.classList.add('hidden');
   modal.classList.remove('flex');
-  // Solo restaurar overflow si el modal de agora o stripe no están abiertos
   const agora = document.getElementById('agoraModal');
   const stripe = document.getElementById('stripeModal');
   if ((!agora || agora.classList.contains('hidden')) && (!stripe || stripe.classList.contains('hidden'))) {
@@ -1718,34 +1782,93 @@ function handleSocialLogin(provider) {
 
 function promptProviderLogin(provider) {
   const isEn = currentLang === 'en';
-  const providerLabel = provider === 'google' ? 'Google' : 'Apple';
 
-  let email = '';
-  try { email = localStorage.getItem('alexandria_last_email') || ''; } catch(e) {}
-  if (!email) {
-    email = provider === 'google' ? 'alexandria.user@gmail.com' : 'alexandria.user@icloud.com';
+  if (provider === 'google') {
+    const googleClientId = localStorage.getItem('alexandria_google_client_id');
+    if (googleClientId && window.google && window.google.accounts && window.google.accounts.id) {
+      try {
+        google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            showEmailPromptForProvider('google');
+          }
+        });
+        return;
+      } catch (e) {}
+    }
+    showEmailPromptForProvider('google');
+  } else if (provider === 'apple') {
+    const appleClientId = localStorage.getItem('alexandria_apple_client_id');
+    if (appleClientId && window.AppleID && window.AppleID.auth) {
+      try {
+        AppleID.auth.init({
+          clientId: appleClientId,
+          scope: 'name email',
+          redirectURI: window.location.origin,
+          usePopup: true
+        });
+        AppleID.auth.signIn().then(res => {
+          if (res && res.user && res.user.email) {
+            saveUserAuth({
+              provider: 'apple',
+              email: res.user.email,
+              name: (res.user.name && res.user.name.firstName) ? `${res.user.name.firstName} ${res.user.name.lastName || ''}`.trim() : res.user.email.split('@')[0],
+              signedAt: new Date().toISOString()
+            });
+            closeAuthModal();
+            showToast(isEn ? 'Signed in with Apple successfully!' : '¡Sesión iniciada con Apple con éxito!');
+            if (pendingCheckoutTier) {
+              const tier = pendingCheckoutTier;
+              pendingCheckoutTier = null;
+              setTimeout(() => handleStripeCheckout(tier), 400);
+            }
+          }
+        }).catch(() => {
+          showEmailPromptForProvider('apple');
+        });
+        return;
+      } catch (e) {}
+    }
+    showEmailPromptForProvider('apple');
   }
+}
 
-  const user = {
-    provider: provider,
-    email: email,
-    name: email.split('@')[0],
-    signedAt: new Date().toISOString()
-  };
-
-  saveUserAuth(user);
-  closeAuthModal();
-
-  showToast(isEn
-    ? `Signed in with ${providerLabel} successfully!`
-    : `¡Sesión iniciada con ${providerLabel} con éxito!`);
-
-  // Si había una compra en pausa esperando inicio de sesión, reanudar
-  if (pendingCheckoutTier) {
-    const tier = pendingCheckoutTier;
-    pendingCheckoutTier = null;
-    setTimeout(() => handleStripeCheckout(tier), 400);
+function showEmailPromptForProvider(provider) {
+  const isEn = currentLang === 'en';
+  openAuthModal();
+  const input = document.getElementById('authEmailInput');
+  const label = document.getElementById('authEmailLabel');
+  if (provider === 'google') {
+    if (label) label.textContent = isEn ? 'Enter your Google email (@gmail.com or Workspace):' : 'Ingresa tu correo de Google (@gmail.com o Workspace):';
+    if (input) {
+      input.placeholder = 'tu.nombre@gmail.com';
+      input.dataset.preferredProvider = 'google';
+      input.focus();
+    }
+  } else {
+    if (label) label.textContent = isEn ? 'Enter your Apple ID email (@icloud.com):' : 'Ingresa tu correo de Apple ID (@icloud.com):';
+    if (input) {
+      input.placeholder = 'tu.nombre@icloud.com';
+      input.dataset.preferredProvider = 'apple';
+      input.focus();
+    }
   }
+}
+
+function saveOAuthClientIds() {
+  const gInput = document.getElementById('googleClientIdInput');
+  const aInput = document.getElementById('appleClientIdInput');
+  const isEn = currentLang === 'en';
+  if (gInput) localStorage.setItem('alexandria_google_client_id', gInput.value.trim());
+  if (aInput) localStorage.setItem('alexandria_apple_client_id', aInput.value.trim());
+  initGoogleIdentityServices();
+  showToast(isEn ? 'OAuth Client IDs saved!' : '¡Identificadores OAuth guardados!');
+}
+
+function loadOAuthClientIds() {
+  const gInput = document.getElementById('googleClientIdInput');
+  const aInput = document.getElementById('appleClientIdInput');
+  if (gInput) gInput.value = localStorage.getItem('alexandria_google_client_id') || '';
+  if (aInput) aInput.value = localStorage.getItem('alexandria_apple_client_id') || '';
 }
 
 function submitCustomEmailAuth() {

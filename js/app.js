@@ -1413,6 +1413,7 @@ function initPwaServiceWorker() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').then((reg) => {
       console.log('Alexandria PWA Service Worker registered:', reg.scope);
+      reg.update();
     }).catch((err) => {
       console.warn('Service Worker registration note:', err);
     });
@@ -1781,53 +1782,119 @@ function handleSocialLogin(provider) {
 }
 
 function promptProviderLogin(provider) {
-  const isEn = currentLang === 'en';
-
   if (provider === 'google') {
-    const googleClientId = localStorage.getItem('alexandria_google_client_id');
-    if (googleClientId && window.google && window.google.accounts && window.google.accounts.id) {
-      try {
-        google.accounts.id.prompt((notification) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            showEmailPromptForProvider('google');
-          }
-        });
-        return;
-      } catch (e) {}
-    }
-    showEmailPromptForProvider('google');
+    triggerRealGooglePopup();
   } else if (provider === 'apple') {
-    const appleClientId = localStorage.getItem('alexandria_apple_client_id');
-    if (appleClientId && window.AppleID && window.AppleID.auth) {
-      try {
-        AppleID.auth.init({
-          clientId: appleClientId,
-          scope: 'name email',
-          redirectURI: window.location.origin,
-          usePopup: true
-        });
-        AppleID.auth.signIn().then(res => {
-          if (res && res.user && res.user.email) {
-            saveUserAuth({
-              provider: 'apple',
-              email: res.user.email,
-              name: (res.user.name && res.user.name.firstName) ? `${res.user.name.firstName} ${res.user.name.lastName || ''}`.trim() : res.user.email.split('@')[0],
-              signedAt: new Date().toISOString()
-            });
-            closeAuthModal();
-            showToast(isEn ? 'Signed in with Apple successfully!' : '¡Sesión iniciada con Apple con éxito!');
-            if (pendingCheckoutTier) {
-              const tier = pendingCheckoutTier;
-              pendingCheckoutTier = null;
-              setTimeout(() => handleStripeCheckout(tier), 400);
+    triggerRealApplePopup();
+  }
+}
+
+function triggerRealGooglePopup() {
+  const isEn = currentLang === 'en';
+  const cId = localStorage.getItem('alexandria_google_client_id') || '';
+  const width = 500, height = 620;
+  const left = window.screen.width / 2 - width / 2;
+  const top = window.screen.height / 2 - height / 2;
+  const redirectUri = window.location.origin + window.location.pathname;
+
+  // 1. Si ya se configuró un Client ID oficial de Google Cloud, usar Google Identity Services
+  if (cId && window.google && window.google.accounts && window.google.accounts.oauth2) {
+    try {
+      const tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: cId,
+        scope: 'email profile openid',
+        prompt: 'select_account',
+        callback: async (tokenResponse) => {
+          if (tokenResponse && tokenResponse.access_token) {
+            try {
+              const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+              });
+              const info = await res.json();
+              if (info && info.email) {
+                const user = {
+                  provider: 'google',
+                  email: info.email,
+                  name: info.name || info.email.split('@')[0],
+                  picture: info.picture || '',
+                  signedAt: new Date().toISOString()
+                };
+                saveUserAuth(user);
+                closeAuthModal();
+                showToast(isEn ? `Welcome, ${user.name}!` : `¡Bienvenido, ${user.name}!`);
+                if (pendingCheckoutTier) {
+                  const t = pendingCheckoutTier; pendingCheckoutTier = null;
+                  setTimeout(() => handleStripeCheckout(t), 400);
+                }
+              }
+            } catch (err) {
+              console.error('Error fetching Google userinfo:', err);
             }
           }
-        }).catch(() => {
-          showEmailPromptForProvider('apple');
-        });
-        return;
-      } catch (e) {}
+        }
+      });
+      tokenClient.requestAccessToken({ prompt: 'select_account' });
+      return;
+    } catch (e) {
+      console.warn('GIS TokenClient fallback:', e);
     }
+  }
+
+  // 2. Abrir la ventana emergente oficial de Google OAuth
+  const oauthUrl = cId
+    ? `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(cId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=email%20profile&prompt=select_account`
+    : `https://accounts.google.com/o/oauth2/v2/auth?client_id=GOOGLE_CLIENT_ID_REQUERIDO&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=email%20profile`;
+
+  const popup = window.open(oauthUrl, 'GoogleSignIn', `width=${width},height=${height},top=${top},left=${left}`);
+  if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+    showToast(isEn ? 'Please allow popups to open Google Sign-In.' : 'Por favor permite ventanas emergentes en tu navegador.');
+  }
+
+  // Mostrar el panel de configuración y entrada de correo real
+  if (!cId) {
+    showEmailPromptForProvider('google');
+  }
+}
+
+function triggerRealApplePopup() {
+  const isEn = currentLang === 'en';
+  const cId = localStorage.getItem('alexandria_apple_client_id') || '';
+  const width = 500, height = 620;
+  const left = window.screen.width / 2 - width / 2;
+  const top = window.screen.height / 2 - height / 2;
+
+  if (cId && window.AppleID && window.AppleID.auth) {
+    try {
+      AppleID.auth.init({
+        clientId: cId,
+        scope: 'name email',
+        redirectURI: window.location.origin,
+        usePopup: true
+      });
+      AppleID.auth.signIn().then(res => {
+        if (res && res.user && res.user.email) {
+          saveUserAuth({
+            provider: 'apple',
+            email: res.user.email,
+            name: (res.user.name && res.user.name.firstName) ? `${res.user.name.firstName} ${res.user.name.lastName || ''}`.trim() : res.user.email.split('@')[0],
+            signedAt: new Date().toISOString()
+          });
+          closeAuthModal();
+          showToast(isEn ? 'Signed in with Apple successfully!' : '¡Sesión iniciada con Apple con éxito!');
+          if (pendingCheckoutTier) {
+            const t = pendingCheckoutTier; pendingCheckoutTier = null;
+            setTimeout(() => handleStripeCheckout(t), 400);
+          }
+        }
+      });
+      return;
+    } catch (e) {}
+  }
+
+  const appleUrl = `https://appleid.apple.com/auth/authorize?client_id=${encodeURIComponent(cId || 'APPLE_CLIENT_ID_REQUERIDO')}&redirect_uri=${encodeURIComponent(window.location.origin)}&response_type=code%20id_token&scope=name%20email&response_mode=web_message`;
+  window.open(appleUrl, 'AppleAuth', `width=${width},height=${height},top=${top},left=${left}`);
+
+  if (!cId) {
     showEmailPromptForProvider('apple');
   }
 }

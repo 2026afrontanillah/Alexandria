@@ -1,0 +1,9 @@
+# Videos e imágenes originales en alta calidad (no los usa la página y pesan mucho)
+media-originales/
+
+# Archivos del sistema / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+__pycache__/

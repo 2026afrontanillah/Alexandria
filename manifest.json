@@ -1,0 +1,26 @@
+{
+  "name": "Alexandria Nocturna — Nocturnal Dialogues",
+  "short_name": "Alexandria",
+  "description": "Engage in real-time acoustic philosophical dialogues with ancient thinkers.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#090807",
+  "theme_color": "#090807",
+  "orientation": "any",
+  "categories": ["education", "entertainment", "lifestyle"],
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

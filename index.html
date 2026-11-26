@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alexandria Nocturna — Nocturnal Dialogues</title>
+
+  <!-- PWA & Mobile Web App Meta -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#090807" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Alexandria" />
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
+
+  <!-- Google Fonts: Cinzel, Cormorant Garamond & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- ElevenLabs Realtime Client SDK (Llamada directa sin widget flotante) -->
+  <script src="https://cdn.jsdelivr.net/npm/@elevenlabs/client/dist/lib.iife.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        screens: {
+          'sm': '640px',
+          'md': '768px',
+          'desk': '920px',
+          'lg': '1100px',
+          'xl': '1280px',
+        },
+        extend: {
+          colors: {
+            obsidian: {
+              950: '#090807',
+              900: '#100E0C',
+              850: '#161311',
+              800: '#1D1916',
+              700: '#28231E',
+            },
+            aurum: {
+              light: '#F0D596',
+              DEFAULT: '#D4A853',
+              deep: '#A67C2E',
+              glow: 'rgba(212, 168, 83, 0.14)',
+              border: 'rgba(212, 168, 83, 0.24)',
+            },
+            crimson: {
+              DEFAULT: '#8C1D2B',
+              hover: '#A82435',
+              soft: 'rgba(140, 29, 43, 0.22)',
+            },
+            ivory: {
+              primary: '#F5EFE6',
+              secondary: '#B5A99A',
+              muted: '#786E63',
+            }
+          },
+          fontFamily: {
+            display: ['"Cinzel"', 'Georgia', 'serif'],
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            'monolith': '0 22px 50px -15px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(240, 213, 150, 0.12)',
+            'monolith-hover': '0 28px 65px -12px rgba(0, 0, 0, 0.95), 0 0 38px -8px rgba(212, 168, 83, 0.18), inset 0 1px 0 rgba(240, 213, 150, 0.28)',
+            'gold-cta': '0 10px 28px -6px rgba(212, 168, 83, 0.35), inset 0 1px 0 rgba(255, 250, 235, 0.45)',
+            'gold-cta-hover': '0 14px 34px -4px rgba(212, 168, 83, 0.5), inset 0 1px 0 rgba(255, 250, 235, 0.65)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="relative selection:bg-aurum selection:text-obsidian-950">
+
+  <!-- Subtle Stone & Candlelight Grain -->
+  <div class="nocturnal-grain" aria-hidden="true"></div>
+
+  <!-- Celestial Astrolabe & Nocturnal Colonnade Background -->
+  <div class="pointer-events-none fixed inset-x-0 top-0 h-[520px] overflow-hidden z-0" aria-hidden="true">
+    <!-- Celestial Concentric Rings behind Hero -->
+    <div class="absolute left-1/2 -top-44 -translate-x-1/2 w-[680px] h-[680px] opacity-25">
+      <svg viewBox="0 0 600 600" fill="none" class="w-full h-full celestial-orbit">
+        <circle cx="300" cy="300" r="280" stroke="#D4A853" stroke-width="0.6" stroke-dasharray="3 8" />
+        <circle cx="300" cy="300" r="225" stroke="#D4A853" stroke-width="0.5" stroke-opacity="0.6" />
+        <circle cx="300" cy="300" r="165" stroke="#D4A853" stroke-width="0.6" stroke-dasharray="1 6" />
+        <line x1="20" y1="300" x2="580" y2="300" stroke="#D4A853" stroke-width="0.4" stroke-opacity="0.4" />
+        <line x1="300" y1="20" x2="300" y2="580" stroke="#D4A853" stroke-width="0.4" stroke-opacity="0.4" />
+        <circle cx="300" cy="75" r="3" fill="#F0D596" fill-opacity="0.7" />
+        <circle cx="495" cy="188" r="2.2" fill="#D4A853" fill-opacity="0.6" />
+        <circle cx="115" cy="412" r="2.5" fill="#D4A853" fill-opacity="0.5" />
+      </svg>
+    </div>
+
+    <!-- Subtle Gold-Etched Classical Colonnade Silhouette (Right Wing) -->
+    <div class="hidden sm:block absolute top-0 right-0 w-[620px] h-[380px] opacity-25">
+      <div class="absolute inset-0 bg-gradient-to-r from-[#090807] via-[#090807]/60 to-transparent z-10"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-[#090807] via-transparent to-transparent z-10"></div>
+      <svg viewBox="0 0 800 400" fill="none" class="w-full h-full object-cover object-right-top">
+        <g stroke="#D4A853" stroke-opacity="0.42" stroke-width="1.05">
+          <path d="M260 230 L795 72" />
+          <path d="M260 245 L795 104" stroke-width="1.35" />
+          <path d="M620 72 L745 18 L800 38" stroke-width="1.3" />
+          <path d="M210 334 L800 302" />
+          <rect x="748" y="102" width="26" height="196" fill="#1D1916" fill-opacity="0.45" />
+          <line x1="755" y1="106" x2="755" y2="298" />
+          <line x1="766" y1="106" x2="766" y2="298" />
+          <rect x="684" y="120" width="22" height="181" fill="#1D1916" fill-opacity="0.35" />
+          <line x1="692" y1="124" x2="692" y2="300" />
+          <line x1="700" y1="124" x2="700" y2="300" />
+          <rect x="626" y="136" width="18" height="168" />
+          <rect x="574" y="151" width="16" height="156" />
+          <rect x="526" y="165" width="14" height="144" />
+          <rect x="483" y="177" width="12" height="134" />
+          <rect x="444" y="188" width="10" height="125" />
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <!-- 1. BARRA SUPERIOR FLOTANTE (de borde a borde, fija al hacer scroll) -->
+  <header id="siteHeader" class="sticky top-0 z-40 w-full">
+    <div id="siteHeaderBar" class="floating-nav w-full px-4 sm:px-6 lg:px-10 py-3 flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand Identity -->
+      <a href="#" onclick="resetFilter(event)" class="group inline-flex items-center gap-3.5 focus:outline-none">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-b from-obsidian-700 to-obsidian-900 border border-aurum/40 flex items-center justify-center shadow-inner group-hover:border-aurum transition-colors">
+          <!-- Luminous Gold Ionic Column -->
+          <svg class="w-6 h-6 text-aurum" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M6 7.5H30" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            <circle cx="9.5" cy="11" r="3.2" stroke="currentColor" stroke-width="1.6"/>
+            <circle cx="9.5" cy="11" r="1" fill="currentColor"/>
+            <circle cx="26.5" cy="11" r="3.2" stroke="currentColor" stroke-width="1.6"/>
+            <circle cx="26.5" cy="11" r="1" fill="currentColor"/>
+            <path d="M12.5 9.5H23.5M12 13.5H24" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M13 13.5V28.5M16.3 13.5V28.5M19.7 13.5V28.5M23 13.5V28.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M10.5 28.5H25.5M8.5 31.2H27.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <span class="font-display text-xl sm:text-2xl font-semibold tracking-[0.06em] text-ivory-primary">
+              ALEXANDRIA
+            </span>
+          </div>
+          <span id="brandTagline" class="text-[11px] text-ivory-muted tracking-wide hidden sm:block">
+            The Midnight Symposium
+          </span>
+        </div>
+      </a>
+
+      <!-- Center Filter Pills (Desktop) -->
+      <nav aria-label="Filter by philosophical theme" class="hidden lg:inline-flex items-center p-1 rounded-full bg-obsidian-950/85 border border-aurum/20">
+        <button data-topic="all" onclick="setTopicFilter('all')" class="topic-btn px-3.5 py-1.5 rounded-full text-xs font-medium transition-all bg-aurum text-obsidian-950 font-semibold shadow-sm">
+          All
+        </button>
+        <button data-topic="ethics" onclick="setTopicFilter('ethics')" class="topic-btn px-3.5 py-1.5 rounded-full text-xs font-medium transition-all text-ivory-secondary hover:text-ivory-primary">
+          Ethics
+        </button>
+        <button data-topic="reality" onclick="setTopicFilter('reality')" class="topic-btn px-3.5 py-1.5 rounded-full text-xs font-medium transition-all text-ivory-secondary hover:text-ivory-primary">
+          Reality
+        </button>
+        <button data-topic="justice" onclick="setTopicFilter('justice')" class="topic-btn px-3.5 py-1.5 rounded-full text-xs font-medium transition-all text-ivory-secondary hover:text-ivory-primary">
+          Justice
+        </button>
+      </nav>
+
+      <!-- Right Action Controls -->
+      <div class="flex items-center gap-2 sm:gap-2.5 ml-auto lg:ml-0">
+        <!-- Live Credit / Time Counter Pill -->
+        <button
+          type="button"
+          onclick="openStripeModal()"
+          id="creditBadgeBtn"
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-obsidian-950 via-obsidian-900 to-obsidian-950 border border-aurum/40 hover:border-aurum text-aurum text-xs font-semibold shadow-sm transition-all group"
+          title="Available credits. Click to add more."
+        >
+          <span class="relative flex h-2 w-2">
+            <span id="creditPulseRing" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span id="creditDot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span id="creditBadgeText" class="tracking-wide font-mono text-[11.5px] text-ivory-primary">50 credits</span>
+          <span class="text-[10px] uppercase font-bold tracking-wider text-aurum group-hover:text-aurum-light ml-0.5">+ Buy</span>
+        </button>
+
+        <!-- PWA Install Button -->
+        <button
+          type="button"
+          id="pwaInstallBtn"
+          onclick="triggerPwaInstall()"
+          class="hidden pwa-install-trigger inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-aurum/15 hover:bg-aurum/25 border border-aurum/40 text-aurum text-xs font-medium transition-all"
+          title="Install Alexandria Nocturna as an app on your device"
+        >
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span class="hidden sm:inline">Install App</span>
+        </button>
+
+        <!-- Language Toggle -->
+        <div class="inline-flex items-center p-0.5 rounded-full bg-obsidian-950/90 border border-aurum/25" role="group">
+          <button id="langEnBtn" onclick="setLanguage('en')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wider transition-all bg-aurum text-obsidian-950">
+            EN
+          </button>
+          <button id="langEsBtn" onclick="setLanguage('es')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wider transition-all text-ivory-secondary hover:text-ivory-primary">
+            ES
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </header>
+
+  <!-- Main Page Shell -->
+  <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pb-20">
+
+      <!-- Mobile / Tablet Filter Row & Actions -->
+      <div class="flex lg:hidden items-center justify-between gap-2 overflow-x-auto pt-4 pb-1">
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button data-topic="all" onclick="setTopicFilter('all')" class="topic-btn-mobile shrink-0 px-3 py-1 rounded-full text-xs font-semibold border transition-all bg-aurum text-obsidian-950 border-aurum">
+            All
+          </button>
+          <button data-topic="ethics" onclick="setTopicFilter('ethics')" class="topic-btn-mobile shrink-0 px-3 py-1 rounded-full text-xs font-medium border transition-all bg-obsidian-850/90 text-ivory-secondary border-aurum/20">
+            Ethics
+          </button>
+          <button data-topic="reality" onclick="setTopicFilter('reality')" class="topic-btn-mobile shrink-0 px-3 py-1 rounded-full text-xs font-medium border transition-all bg-obsidian-850/90 text-ivory-secondary border-aurum/20">
+            Reality
+          </button>
+          <button data-topic="justice" onclick="setTopicFilter('justice')" class="topic-btn-mobile shrink-0 px-3 py-1 rounded-full text-xs font-medium border transition-all bg-obsidian-850/90 text-ivory-secondary border-aurum/20">
+            Justice
+          </button>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onclick="triggerPwaInstall()"
+            class="hidden pwa-install-trigger shrink-0 px-2.5 py-1 rounded-full bg-aurum/15 border border-aurum/30 text-aurum text-[11px] font-semibold flex items-center gap-1"
+          >
+            <span>⬇</span><span>Install</span>
+          </button>
+          <button
+            type="button"
+            onclick="openStripeModal()"
+            class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-obsidian-950 border border-aurum/40 text-aurum text-[11.5px] font-mono font-bold"
+          >
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span id="creditBadgeTextMobile">50 credits</span>
+            <span class="text-[10px] text-aurum-light uppercase font-bold">+</span>
+          </button>
+        </div>
+      </div>
+
+
+    <!-- 2. CENTERED DRAMATIC HERO SECTION -->
+    <section class="pt-9 pb-9 desk:pt-14 desk:pb-12 text-center max-w-4xl mx-auto">
+      <h1 id="heroTitle" class="font-serif text-[36px] sm:text-[48px] desk:text-[58px] font-semibold text-ivory-primary leading-[1.06] tracking-[-0.01em]">
+        Ask Questions and Converse with the Greatest Minds of All Time.
+      </h1>
+
+      <!-- Ornamental Classical Gold Divider -->
+      <div class="mt-6 flex items-center justify-center gap-3 opacity-75" aria-hidden="true">
+        <span class="h-px w-14 sm:w-24 bg-gradient-to-r from-transparent to-aurum/60"></span>
+        <span class="text-aurum text-xs">✦</span>
+        <span class="h-px w-14 sm:w-24 bg-gradient-to-l from-transparent to-aurum/60"></span>
+      </div>
+    </section>
+
+    <!-- 3. OBSIDIAN MONOLITH GALLERY (3-Column Chiaroscuro Cards on Desktop | Sleek Horizontal Reliquaries on Mobile) -->
+    <main>
+      <div id="philosophersGrid" class="grid grid-cols-1 desk:grid-cols-3 gap-5 desk:gap-7 items-stretch">
+        <!-- Rendered dynamically -->
+      </div>
+    </main>
+
+    <!-- 4. NOCTURNAL FOOTER -->
+    <footer class="mt-16 pt-7 border-t border-aurum/15 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ivory-muted">
+      <div class="flex items-center gap-2.5">
+        <span class="inline-block w-2 h-2 rounded-full bg-aurum/70"></span>
+        <span id="footerNote">Interactive acoustic sanctuary · Converse aloud in real time or reflect in writing.</span>
+      </div>
+      <div class="font-serif italic text-sm text-aurum-light/85 tracking-wide" id="footerMotto">
+        “Γνῶθι σεαυτόν” — Know Thyself
+      </div>
+    </footer>
+  </div>
+
+  <!-- 5. VENTANA DE LLAMADA POR VOZ (sin chat escrito) -->
+  <div id="agoraModal" class="fixed inset-0 z-50 hidden items-center justify-center p-0 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="modalPhilName">
+    <!-- Fondo oscuro -->
+    <div onclick="closeAgoraSession()" class="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"></div>
+
+    <div class="relative z-10 w-full h-full sm:h-auto sm:max-h-[94vh] max-w-[460px] bg-obsidian-950 sm:rounded-[28px] border border-aurum/30 shadow-2xl flex flex-col overflow-hidden">
+
+      <!-- Retrato grande del filósofo -->
+      <div class="relative w-full flex-1 min-h-[280px] sm:flex-none sm:aspect-[4/5] bg-obsidian-800">
+        <div id="modalPortraitStage" class="absolute inset-0 overflow-hidden transition-all duration-500">
+          <!-- Se llena desde app.js -->
+        </div>
+
+        <!-- Controles arriba: saldo, silenciar y cerrar -->
+        <div class="absolute top-0 inset-x-0 z-30 p-4 flex items-center justify-between gap-2 bg-gradient-to-b from-black/70 via-black/30 to-transparent">
+          <button
+            type="button"
+            onclick="openStripeModal()"
+            id="chamberTimerBtn"
+            class="whitespace-nowrap shrink-0 px-3 py-1.5 rounded-full text-xs font-mono font-semibold transition-all bg-obsidian-950/85 backdrop-blur-md border border-aurum/40 hover:border-aurum text-aurum flex items-center gap-1.5 shadow-sm group"
+            title="Credits remaining. Click to add more."
+          >
+            <span class="relative flex h-2 w-2">
+              <span id="chamberTimerPulse" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span id="chamberTimerDot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span id="chamberTimerText">50 credits</span>
+            <span class="text-[10px] text-aurum-light uppercase font-bold group-hover:underline">+ Buy</span>
+          </button>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <button id="ttsToggleBtn" onclick="toggleTTS()" class="w-9 h-9 shrink-0 flex items-center justify-center rounded-full border border-aurum/30 bg-obsidian-950/85 backdrop-blur-md text-aurum hover:border-aurum/60 transition-colors" title="Sound on/off">
+              <svg id="ttsOnIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+              </svg>
+              <svg id="ttsOffIcon" class="w-4 h-4 hidden text-ivory-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <line x1="23" y1="9" x2="17" y2="15"></line>
+                <line x1="17" y1="9" x2="23" y2="15"></line>
+              </svg>
+            </button>
+            <button onclick="closeAgoraSession()" class="w-9 h-9 shrink-0 flex items-center justify-center rounded-full border border-aurum/30 bg-obsidian-950/85 backdrop-blur-md text-ivory-secondary hover:text-aurum-light hover:border-aurum/60 transition-colors" aria-label="Close">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Degradado inferior + nombre -->
+        <div class="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-obsidian-950 via-obsidian-950/80 to-transparent z-10"></div>
+        <div class="absolute inset-x-0 bottom-0 z-20 px-6 pb-4 text-center">
+          <h2 id="modalPhilName" class="font-serif text-3xl sm:text-4xl font-semibold text-ivory-primary leading-tight truncate">
+            Socrates
+          </h2>
+          <p id="modalPhilMeta" class="text-xs text-ivory-secondary truncate mt-0.5">
+            470–399 BCE · Ethics & Maieutics
+          </p>
+        </div>
+      </div>
+
+      <!-- Aviso de pocos créditos -->
+      <div id="lowCreditWarningBanner" class="hidden px-5 py-2.5 bg-gradient-to-r from-crimson/95 via-crimson/80 to-obsidian-950 border-y border-aurum/40 text-xs text-ivory-primary flex items-center justify-between gap-3 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <span class="text-sm">⏳</span>
+          <span id="lowCreditWarningText" class="font-medium text-ivory-primary">
+            Notice: only 10 credits left. Add credits to keep talking!
+          </span>
+        </div>
+        <button type="button" onclick="openStripeModal()" class="shrink-0 px-3 py-1 rounded-full bg-gradient-to-r from-aurum to-aurum-light text-obsidian-950 font-bold text-xs shadow-gold-cta hover:brightness-110">
+          + Credits
+        </button>
+      </div>
+
+      <!-- Micrófono, ondas y estado de la llamada -->
+      <div id="voiceStage" class="px-6 pt-5 pb-4 flex flex-col items-center gap-3 border-t border-aurum/15 shrink-0">
+        <div class="flex items-center gap-4">
+          <div class="relative flex items-center justify-center">
+            <div id="auraRingOuter" class="halo-idle absolute w-16 h-16 rounded-full bg-gradient-to-tr from-crimson/40 via-aurum/35 to-aurum-light/30 blur-md"></div>
+            <button
+              id="stageMicBtn"
+              type="button"
+              onclick="toggleVoiceRecognition()"
+              class="relative z-10 w-14 h-14 rounded-full bg-gradient-to-b from-aurum-light to-aurum text-obsidian-950 shadow-gold-cta hover:shadow-gold-cta-hover flex items-center justify-center transition-transform active:scale-95"
+              title="Speak into microphone"
+            >
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="22"/>
+                <line x1="8" y1="22" x2="16" y2="22"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Ondas doradas -->
+          <div id="waveformContainer" class="flex items-center gap-1.5 h-8 px-2">
+            <span class="n-wave-bar"></span>
+            <span class="n-wave-bar"></span>
+            <span class="n-wave-bar"></span>
+            <span class="n-wave-bar"></span>
+            <span class="n-wave-bar"></span>
+            <span class="n-wave-bar"></span>
+            <span class="n-wave-bar"></span>
+            <span class="n-wave-bar"></span>
+            <span class="n-wave-bar"></span>
+          </div>
+        </div>
+
+        <p id="voiceStateCaption" class="text-[12px] text-ivory-secondary text-center leading-snug max-w-[300px]">
+          Tap the golden microphone to speak.
+        </p>
+      </div>
+
+      <!-- Frase del filósofo -->
+      <div class="px-6 pb-5 shrink-0">
+        <p id="modalEpigraph" class="font-serif italic text-sm text-aurum-light/80 leading-relaxed text-center">
+          “The unexamined life is not worth living.”
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. STRIPE CHECKOUT & CREDITS TOP-UP MODAL -->
+  <div id="stripeModal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-5" role="dialog" aria-modal="true" aria-labelledby="stripeModalTitle">
+    <div onclick="closeStripeModal()" class="fixed inset-0 bg-black/85 backdrop-blur-md transition-opacity"></div>
+    <div class="relative z-10 w-full max-w-2xl bg-gradient-to-b from-obsidian-900 via-obsidian-900 to-obsidian-950 rounded-[28px] border border-aurum/40 shadow-2xl p-6 sm:p-8 overflow-y-auto max-h-[92vh]">
+      <!-- Close button -->
+      <button onclick="closeStripeModal()" class="absolute top-4 right-4 p-2 rounded-full border border-aurum/25 bg-obsidian-850 text-ivory-secondary hover:text-aurum-light transition-colors" aria-label="Close modal">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+
+      <!-- Header -->
+      <div class="text-center max-w-lg mx-auto mb-7">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-aurum/15 border border-aurum/30 text-aurum text-[11px] font-semibold uppercase tracking-wider mb-3">
+          <span>✦</span>
+          <span id="stripeModalBadge">Nocturnal Symposium Credits</span>
+        </div>
+        <h2 id="stripeModalTitle" class="font-serif text-2xl sm:text-3xl font-semibold text-ivory-primary leading-tight">
+          Extend Your Philosophical Dialogues
+        </h2>
+        <p id="stripeModalSubtitle" class="text-xs sm:text-sm text-ivory-secondary mt-2 leading-relaxed">
+          You start with 50 free credits. Add credits securely via Stripe to keep conversing without interruption.
+        </p>
+
+        <!-- Current Balance Callout -->
+        <div class="mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-xl bg-obsidian-950 border border-aurum/25 text-xs">
+          <span id="balanceLabel" class="text-ivory-secondary">Current Balance:</span>
+          <span id="modalCurrentBalanceText" class="font-mono font-bold text-aurum text-sm">50 credits</span>
+        </div>
+      </div>
+
+      <!-- Packages Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <!-- 300 créditos · $7 -->
+        <div class="rounded-2xl p-4 sm:p-5 bg-obsidian-850/90 border border-aurum/25 hover:border-aurum/50 transition-all flex flex-col justify-between text-center relative group">
+          <div>
+            <div class="font-serif text-3xl sm:text-4xl font-bold text-ivory-primary mt-1">300 <span class="credits-word text-xs font-sans text-ivory-secondary font-normal">credits</span></div>
+            <div class="text-lg font-bold text-aurum mt-2">$7 <span class="text-[10px] text-ivory-muted font-normal">USD</span></div>
+          </div>
+          <button onclick="handleStripeCheckout('tier300')" class="mt-4 w-full py-2.5 px-3 rounded-xl bg-obsidian-800 hover:bg-aurum text-aurum-light hover:text-obsidian-950 border border-aurum/30 text-xs font-semibold transition-all">
+            <span class="buy-word">Buy</span> 300
+          </button>
+        </div>
+
+        <!-- 600 créditos · $12 -->
+        <div class="rounded-2xl p-4 sm:p-5 bg-gradient-to-b from-obsidian-800 via-obsidian-850 to-obsidian-900 border-2 border-aurum shadow-[0_0_25px_rgba(212,168,83,0.18)] flex flex-col justify-between text-center relative group">
+          <div class="popular-word absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-aurum text-obsidian-950 text-[9px] font-bold uppercase tracking-wider shadow-sm whitespace-nowrap">Most Popular</div>
+          <div>
+            <div class="font-serif text-3xl sm:text-4xl font-bold text-ivory-primary mt-1">600 <span class="credits-word text-xs font-sans text-ivory-secondary font-normal">credits</span></div>
+            <div class="text-xl font-bold text-aurum mt-2">$12 <span class="text-[10px] text-ivory-muted font-normal">USD</span></div>
+          </div>
+          <button onclick="handleStripeCheckout('tier600')" class="mt-4 w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-aurum to-aurum-light text-obsidian-950 text-xs font-bold shadow-gold-cta hover:brightness-110 transition-all">
+            <span class="buy-word">Buy</span> 600
+          </button>
+        </div>
+
+        <!-- 3300 créditos · $50 -->
+        <div class="rounded-2xl p-4 sm:p-5 bg-obsidian-850/90 border border-aurum/25 hover:border-aurum/50 transition-all flex flex-col justify-between text-center relative group">
+          <div>
+            <div class="font-serif text-3xl sm:text-4xl font-bold text-ivory-primary mt-1">3,300 <span class="credits-word text-xs font-sans text-ivory-secondary font-normal">credits</span></div>
+            <div class="text-lg font-bold text-aurum mt-2">$50 <span class="text-[10px] text-ivory-muted font-normal">USD</span></div>
+          </div>
+          <button onclick="handleStripeCheckout('tier3300')" class="mt-4 w-full py-2.5 px-3 rounded-xl bg-obsidian-800 hover:bg-aurum text-aurum-light hover:text-obsidian-950 border border-aurum/30 text-xs font-semibold transition-all">
+            <span class="buy-word">Buy</span> 3,300
+          </button>
+        </div>
+      </div>
+
+      <!-- Stripe Secure Badge & Dev / Link Controls -->
+      <div class="border-t border-aurum/15 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-ivory-muted">
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <span>Guaranteed 256-bit encryption powered by <strong>Stripe</strong></span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="toggleStripeSettings()" class="text-[11px] text-aurum-light/75 hover:text-aurum underline">
+            ⚙️ Stripe Links / Promo
+          </button>
+        </div>
+      </div>
+
+      <!-- Expandable Stripe Link Configuration & Promo Code Panel -->
+      <div id="stripeSettingsPanel" class="hidden mt-4 p-4 rounded-xl bg-obsidian-950 border border-aurum/20 text-xs space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="font-semibold text-aurum">Redeem Promo Voucher or Configure Stripe Links</span>
+          <span class="text-[10px] text-ivory-muted">Saved locally</span>
+        </div>
+
+        <!-- Voucher Code Input -->
+        <div class="flex items-center gap-2">
+          <input id="voucherCodeInput" type="text" placeholder="Enter promo code (e.g. SOCRATES)" class="flex-1 bg-obsidian-850 border border-aurum/30 rounded-lg px-3 py-1.5 text-xs text-ivory-primary uppercase placeholder:normal-case placeholder:text-ivory-muted" />
+          <button type="button" onclick="redeemVoucherCode()" class="px-3 py-1.5 rounded-lg bg-aurum text-obsidian-950 font-semibold hover:brightness-110">
+            Apply Code
+          </button>
+        </div>
+
+        <!-- Instant Dev Test Credit Buttons -->
+        <div class="pt-2 border-t border-aurum/10 flex flex-wrap items-center gap-2">
+          <span class="text-[10px] text-ivory-muted">Dev Simulation:</span>
+          <button type="button" onclick="addCredits(150)" class="px-2.5 py-1 rounded bg-obsidian-800 hover:bg-obsidian-700 text-aurum-light text-[10px] border border-aurum/20 font-medium">
+            +150 credits
+          </button>
+          <button type="button" onclick="addCredits(600)" class="px-2.5 py-1 rounded bg-obsidian-800 hover:bg-obsidian-700 text-aurum-light text-[10px] border border-aurum/20 font-medium">
+            +600 credits
+          </button>
+          <button type="button" onclick="resetCreditsToFiveMinutes()" class="px-2.5 py-1 rounded bg-crimson/30 hover:bg-crimson/50 text-crimson-light text-[10px] border border-crimson/30 font-medium">
+            Reset to 50 free credits
+          </button>
+        </div>
+
+        <!-- Custom Stripe Payment Links URL inputs -->
+        <details class="pt-1 text-[11px] text-ivory-secondary">
+          <summary class="cursor-pointer text-aurum/80 hover:text-aurum">Custom Stripe Payment Links (Optional)</summary>
+          <div class="mt-2 space-y-2">
+            <div>
+              <label class="block text-[10px] text-ivory-muted">300 credits ($7) Stripe Payment Link:</label>
+              <input id="stripeLink_tier300" type="url" placeholder="https://buy.stripe.com/..." class="w-full bg-obsidian-850 border border-aurum/20 rounded px-2.5 py-1 text-xs text-ivory-primary" />
+            </div>
+            <div>
+              <label class="block text-[10px] text-ivory-muted">600 credits ($12) Stripe Payment Link:</label>
+              <input id="stripeLink_tier600" type="url" placeholder="https://buy.stripe.com/..." class="w-full bg-obsidian-850 border border-aurum/20 rounded px-2.5 py-1 text-xs text-ivory-primary" />
+            </div>
+            <div>
+              <label class="block text-[10px] text-ivory-muted">3,300 credits ($50) Stripe Payment Link:</label>
+              <input id="stripeLink_tier3300" type="url" placeholder="https://buy.stripe.com/..." class="w-full bg-obsidian-850 border border-aurum/20 rounded px-2.5 py-1 text-xs text-ivory-primary" />
+            </div>
+            <button type="button" onclick="saveCustomStripeLinks()" class="mt-1 px-3 py-1 rounded bg-aurum/20 border border-aurum/40 text-aurum text-[11px] font-medium hover:bg-aurum/30">
+              Save Links
+            </button>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastNotice" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] hidden px-4 py-2.5 rounded-full bg-obsidian-800 text-aurum-light text-xs font-medium shadow-2xl border border-aurum/40">
+    Notice
+  </div>
+
+  <script src="js/avatar-landmarks.js"></script>
+  <script src="js/avatar.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
